@@ -1,20 +1,16 @@
-# TODO: Сделать оформить ридми
-
+from rest_framework import filters, mixins, viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework import mixins
-from rest_framework import viewsets
-from rest_framework import filters
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 
-from posts.models import Group, Post, Follow
-from api.permissions import IsAuthorOrAdminOrReadOnly
+from api.permissions import IsAuthorOrAdminOnly
 from api.serializers import (
-    GroupSerializer,
-    PostSerializer,
     CommentSerializer,
-    FollowSerializer
+    FollowSerializer,
+    GroupSerializer,
+    PostSerializer
 )
+from posts.models import Group, Post
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -22,7 +18,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     lookup_field = 'id'
     lookup_url_kwarg = 'post_id'
-    permission_classes = (IsAuthorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrAdminOnly)
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -34,7 +30,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
     lookup_field = 'id'
     lookup_url_kwarg = 'group_id'
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AllowAny,)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -42,7 +38,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     lookup_url_kwarg = 'comment_id'
     post_url_kwarg = 'post_id'
-    permission_classes = (IsAuthorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrAdminOnly)
 
     def get_queryset(self):
         post = self._get_post()
@@ -71,7 +67,7 @@ class FollowViewSet(
     search_fields = ('following__username',)
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.follows
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

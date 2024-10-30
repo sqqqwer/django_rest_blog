@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-User = get_user_model()
+from posts.constants import STR_OUTPUT_LIMIT
 
-STR_OUTPUT_LIMIT = 40
+User = get_user_model()
 
 
 class Group(models.Model):
@@ -14,7 +14,6 @@ class Group(models.Model):
     class Meta:
         verbose_name = 'группа'
         verbose_name_plural = 'Группы'
-        default_related_name = 'groups'
 
     def __str__(self):
         return self.title[:STR_OUTPUT_LIMIT]
@@ -32,6 +31,8 @@ class Post(models.Model):
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         default_related_name = 'posts'
+
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.text[:STR_OUTPUT_LIMIT]
@@ -56,9 +57,9 @@ class Comment(models.Model):
 class Follow(models.Model):
     follow_date = models.DateTimeField('Дата подписки', auto_now_add=True)
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='followers')
-    following = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='follows')
+    following = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='followers')
 
     class Meta:
         verbose_name = 'подписка'
@@ -66,7 +67,11 @@ class Follow(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'following'),
-                name='unique_follow'
+                name='%(app_label)s_%(class)s_prevent_not_unique_follow'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('following')),
+                name='%(app_label)s_%(class)s_prevent_self_follow',
             ),
         )
 
