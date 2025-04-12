@@ -18,13 +18,13 @@ API поддерживает JWT аутентификацию пользоват
 1. Клонирование репозитория
    
 ```bash
-$ git clone https://github.com/sqqqwer/api_final_yatube.git
+$ git clone https://github.com/sqqqwer/django_rest_blog.git
 ```
 
 2. Переход в директорию проекта
 
 ```bash
-$ cd api_final_yatube
+$ cd django_rest_blog
 ```
 
 3. Создание виртуального окружения
